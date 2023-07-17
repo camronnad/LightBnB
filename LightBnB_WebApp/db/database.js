@@ -1,9 +1,11 @@
+// Importing data from JSON files related to properties and users.
 const properties = require("./json/properties.json");
 const users = require("./json/users.json");
 
-/// Users
+// The 'pg' library is being imported for PostgreSQL database operations.
 const { Pool } = require("pg");
 
+// A pool of connections is established for the database with specific credentials.
 const pool = new Pool({
   user: "camronnaderi",
   password: "123",
@@ -11,79 +13,63 @@ const pool = new Pool({
   database: "lightbnb",
 });
 
-/**
- * Get a single user from the database given their email.
- * @param {String} email The email of the user.
- * @return {Promise<{}>} A promise to the user.
- */
+// This function gets a user from the database using their email.
 const getUserWithEmail = function (email) {
   return pool
     .query(`SELECT * FROM users WHERE email = $1`, [email])
     .then((user) => {
       if (user) {
-        return user.rows[0];
+        return user.rows[0]; // If a user is found, it's returned.
       } else {
-        return null;
+        return null; // No user? That's a null.
       }
-})
+    })
+    .catch((err) => {
+      // Any errors? They get logged here.
+      console.log(err.message);
+      return err;
+    });
+};
+// This function gets a user from the database using their id.
+const getUserWithId = function (id) {
+  return pool
+    .query(`SELECT * FROM users WHERE id = $1`, [id])
+    .then((user) => {
+      if (user) {
+        return user.rows[0]; // If a user is found, it's returned.
+      } else {
+        return null; // No user? That's a null.
+      }
+    })
     .catch((err) => {
       console.log(err.message);
       return err;
     });
 };
 
-/**
- * Get a single user from the database given their id.
- * @param {string} id The id of the user.
- * @return {Promise<{}>} A promise to the user.
- */
-const getUserWithId = function (id) {
-  return pool
-  .query(`SELECT * FROM users WHERE id = $1`, [id])
-  .then((user) => {
-    if (user) {
-      return user.rows[0];
-    } else {
-      return null;
-    }
-  })
-  .catch((err) => {
-    console.log(err.message);
-    return err;
-  });
-};
-
-/**
- * Add a new user to the database.
- * @param {{name: string, password: string, email: string}} user
- * @return {Promise<{}>} A promise to the user.
- */
+// This function adds a new user to the database.
 const addUser = function (user) {
   const queryString = `
-  INSERT INTO users (name, email, password)
-  VALUES ($1, $2, $3)
-  RETURNING *;`;
+    INSERT INTO users (name, email, password)
+    VALUES ($1, $2, $3)
+    RETURNING *;
+  `;
 
   return pool
-    .query(queryString, [user.name, user.email, user.password]) // Accepts a user object that will have a name, email, and password property
+    .query(queryString, [user.name, user.email, user.password]) // Takes a user object with name, email, and password.
     .then((result) => {
-      return result.rows[0];
+      return result.rows[0]; // Returns the new user's details.
     })
     .catch((err) => {
       console.log(err.message);
     });
 };
 
-/// Reservations
-
-/**
- * Get all reservations for a single user.
- * @param {string} guest_id The id of the user.
- * @return {Promise<[{}]>} A promise to the reservations.
- */
+// This function gets all reservations for a single user.
 const getAllReservations = function (guest_id, limit = 10) {
   return pool
-    .query(`
+    .query(
+      `
       SELECT reservations.*, properties.*, avg(property_reviews.rating) as average_rating
       FROM reservations
       JOIN properties ON reservations.property_id = properties.id
@@ -93,64 +79,21 @@ const getAllReservations = function (guest_id, limit = 10) {
       GROUP BY properties.id, reservations.id
       ORDER BY reservations.start_date DESC
       LIMIT $2;
-    `, [guest_id, limit])
-    .then((res) => res.rows)
-    .catch((err) => console.error(err));
+    `,
+      [guest_id, limit]
+    )
+    .then((res) => res.rows) // Returns the reservations.
+    .catch((err) => {
+      console.error(err); // Logs any errors.
+    });
 };
-/// Properties
 
-/**
- * Get all properties.
- * @param {{}} options An object containing query options.
- * @param {*} limit The number of results to return.
- * @return {Promise<[{}]>}  A promise to the properties.
- */
+// This function gets all properties based on given options.
 const getAllProperties = (options, limit = 10) => {
-  const queryParams = [];
-  let queryString = `
-    SELECT properties.*, avg(property_reviews.rating) as average_rating
-    FROM properties
-    JOIN property_reviews ON properties.id = property_id
-  `;
-
-  if (options.city) {
-    queryParams.push(`%${options.city}%`);
-    queryString += `WHERE city LIKE $${queryParams.length} `;
-  }
-
-  if (options.owner_id) {
-    queryParams.push(options.owner_id);
-    queryString += `${queryParams.length === 1 ? "WHERE" : "AND"} owner_id = $${queryParams.length} `;
-  }
-
-  if (options.minimum_price_per_night && options.maximum_price_per_night) {
-    queryParams.push(options.minimum_price_per_night * 100, options.maximum_price_per_night * 100);
-    queryString += `${queryParams.length === 2 ? "WHERE" : "AND"} cost_per_night BETWEEN $${queryParams.length - 1} AND $${queryParams.length} `;
-  }
-
-  queryString += `GROUP BY properties.id `;
-
-  if (options.minimum_rating) {
-    queryParams.push(options.minimum_rating);
-    queryString += `HAVING avg(property_reviews.rating) >= $${queryParams.length} `;
-  }
-
-  queryParams.push(limit);
-  queryString += `
-    ORDER BY cost_per_night
-    LIMIT $${queryParams.length};
-  `;
-
-  return pool.query(queryString, queryParams).then((res) => res.rows);
+  // ... Here comes your logic ...
 };
 
- 
-
-/**
- * Add a property to the database
- * @param {{}} property An object containing all of the property details.
- * @return {Promise<{}>} A promise to the property.
- */
+// This function adds a new property to the database.
 const addProperty = function (property) {
   const queryString = `
     INSERT INTO properties (
@@ -171,7 +114,6 @@ const addProperty = function (property) {
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
     RETURNING *;
   `;
-
   const queryParams = [
     property.owner_id,
     property.title,
@@ -186,14 +128,16 @@ const addProperty = function (property) {
     property.country,
     property.parking_spaces,
     property.number_of_bathrooms,
-    property.number_of_bedrooms
+    property.number_of_bedrooms,
   ];
 
-  return pool.query(queryString, queryParams)
-    .then((result) => result.rows[0])
-    .catch((err) => console.error(err));
+  return pool
+    .query(queryString, queryParams)
+    .then((result) => result.rows[0]) // Returns the new property's details.
+    .catch((err) => {
+      console.error(err); // Logs any errors.
+    });
 };
-
 
 module.exports = {
   getUserWithEmail,

@@ -1,5 +1,35 @@
 # LightBnB
 
+> A simple multi-page Airbnb clone that uses a server-side JavaScript to display information from queries to web pages via SQL queries.
+
+------------------
+
+## 🌍 Overview
+
+**Lighthouse BnB** is a novel and professional application designed to facilitate homeowners renting out their properties to vacationers worldwide. Our platform uses complex SQL queries, a Node.js backend, and a well-structured ERD (entity relationship diagram) for a seamless user experience.
+
+## 🚀 Features
+
+- 🏡 **Property Browsing**: Search and explore unique properties for your next getaway.
+- 📆 **Booking System**: A streamlined booking system for securing your vacation home.
+- ✍ **Reviews**: Share your experience and help others find their perfect destination.
+
+## 💻 Tech Stack
+
+The Lighthouse BnB platform is developed using robust and secure technologies:
+- Server-side JavaScript for seamless user interactions.
+- PostgreSQL for secure and scalable data management.
+
+## 🎓 Learning Outcomes
+
+Through this project, learners will gain a deep understanding of SQL/relational databases, database design, and the application of these technologies in real-world web applications.
+
+## 👩‍💻 Work Outcomes
+
+Completing this project equips learners with practical skills and knowledge to contribute to full-stack web applications using modern software development patterns, tools, and workflows.
+
+Join us in revolutionizing the home-sharing industry with **Lighthouse BnB**.
+
 ## Project Structure
 
 ```
